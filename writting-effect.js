@@ -1,28 +1,7 @@
-function WritingEffect(params)
+function WritingEffect(speed)
 {
-	function MergeRecursive(obj1, obj2)
-	{
-		for (var p in obj2)
-		{
-			obj1[p] = obj2[p];
-
-			if (obj2[p].constructor==Object)
-				obj1[p] = MergeRecursive(obj1[p], obj2[p]);
-		}
-
-		return obj1;
-	}
-
-	var WritingEffectIntervalID = null;
-
-	var Default = {
-		'speed': 25,
-		'cursor_time': 1000,
-		'cursor_html': '<span class="typed-cursor">|</span>',
-		'attr': 'data-writing-effect',
-	};
-
-	params = MergeRecursive(Default, params||{});
+	if(!speed)
+		speed = 25;
 
 	var elements = [];
 	var all = document.getElementsByTagName('body')[0].getElementsByTagName('*');
@@ -31,54 +10,57 @@ function WritingEffect(params)
 	{
 		var element = all[i];
 
-		if(typeof element.getAttribute !== 'undefined' && element.getAttribute(params.attr) !== null)
+		if(typeof element.getAttribute !== 'undefined' && element.getAttribute('data-writing-effect') !== null)
 			elements.push(element);
 	}
 
-	WritingEffectIntervalID = window.setInterval(function()
+	var WritingEffectIntervalID = window.setInterval(function()
 	{
-		var flag_continue = false;
+		var flag_clear_interval = false;
 
 		for(var i in elements)
 		{
 			if(!elements[i].hasAttribute('data-content'))
 			{
-				elements[i].setAttribute('data-content', elements[i].innerHTML);
-				elements[i].setAttribute('data-cursor-time', params.cursor_time);
+				if(!elements[i].hasAttribute('data-cursor-html'))
+					elements[i].setAttribute('data-cursor-html', "<strong class='typed-cursor'>|</strong>");
 
-				elements[i].innerHTML = '<span></span> ' + params.cursor_html;
+				if(!elements[i].hasAttribute('data-cursor-time'))
+					elements[i].setAttribute('data-cursor-time', 1000);
+
+				elements[i].setAttribute('data-content', elements[i].innerHTML);
+				elements[i].innerHTML = '<span></span> ' + elements[i].getAttribute('data-cursor-html');
 			}
 
 			var wrapper_content = elements[i].getElementsByTagName('span')[0];
-			var content = elements[i].getAttribute('data-content');
-			var letter = content[0];
+			var cursor = elements[i].getElementsByClassName('typed-cursor');
 
-			if(typeof letter === 'undefined')
+			if(cursor.length)
 			{
-				var cursor = wrapper_content.parentElement.getElementsByClassName('typed-cursor');
+				flag_clear_interval = true;
+				var content = elements[i].getAttribute('data-content');
+				var letter = content[0];
 
-				if(cursor.length)
+				if(letter)
 				{
-					var cursor_time = parseInt(elements[i].getAttribute('data-cursor-time'));
-				
-					elements[i].setAttribute('data-cursor-time', cursor_time - params.speed);
-
-					if(cursor_time > params.speed)
-						flag_continue = true;
-					else
-						cursor[0].remove();
+					elements[i].setAttribute('data-content', content.substr(1, content.length - 1));
+					wrapper_content.innerHTML += letter;
 				}
-			}
-			else
-			{
-				elements[i].setAttribute('data-content', content.substr(1, content.length - 1));
-				wrapper_content.innerHTML += letter;
+				else
+				{
+					var cursor_time = parseInt(elements[i].getAttribute('data-cursor-time')) - speed;
+					elements[i].setAttribute('data-cursor-time', cursor_time);
 
-				flag_continue = true;
+					if(cursor_time <= 0)
+					{
+						cursor[0].remove();
+						flag_clear_interval = false;
+					}
+				}
 			}
 		}
 
-		if(!flag_continue)
+		if(!flag_clear_interval)
 			return clearInterval(WritingEffectIntervalID);
-	}, params.speed);
+	}, speed);
 }
