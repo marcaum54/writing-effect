@@ -14,7 +14,7 @@ function WritingEffect(speed)
 			elements.push(element);
 	}
 
-	var WritingEffectIntervalID = window.setInterval(function()
+	var writing_effect_interval_id = window.setInterval(function()
 	{
 		var flag_clear_interval = false;
 
@@ -61,6 +61,6 @@ function WritingEffect(speed)
 		}
 
 		if(!flag_clear_interval)
-			return clearInterval(WritingEffectIntervalID);
+			return clearInterval(writing_effect_interval_id);
 	}, speed);
 }
